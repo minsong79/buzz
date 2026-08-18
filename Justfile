@@ -85,10 +85,16 @@ logs *ARGS:
 
 # Build the Rust workspace
 build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo build --workspace
 
 # Build the Rust workspace in release mode
 build-release:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo build --workspace --release
 
 # Run repo lint, formatting, and repository policy checks
@@ -113,6 +119,9 @@ fmt-check:
 
 # Run clippy with warnings as errors
 clippy:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo clippy --workspace --all-targets -- -D warnings
 
 # Install JS dependencies (pnpm workspace — installs all packages from root)
@@ -205,14 +214,23 @@ _ensure-migrations: _ensure-services
 
 # Run clippy on the desktop Tauri Rust crate
 desktop-tauri-clippy: _ensure-sidecar-stubs
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo clippy --manifest-path {{desktop_tauri_manifest}} --workspace --all-targets -- -D warnings
 
 # Check the desktop Tauri Rust crate compiles
 desktop-tauri-check: _ensure-sidecar-stubs
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo check --manifest-path {{desktop_tauri_manifest}}
 
 # Run desktop Tauri Rust unit tests
 desktop-tauri-test: _ensure-sidecar-stubs
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cd desktop/src-tauri && cargo test --workspace
 
 # Run the native terminal latency gate explicitly on a known-idle host.
@@ -228,6 +246,7 @@ desktop-terminal-performance-test:
 desktop-tauri-test-compiled-flags: _ensure-sidecar-stubs
     #!/usr/bin/env bash
     set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cd desktop/src-tauri
     echo "=== Clean build (no flag) → expect false ==="
     env -u BUZZ_BUILD_AUTO_CONNECT_DEFAULT_RELAY \
@@ -268,6 +287,7 @@ desktop-release-build target="aarch64-apple-darwin":
     touch "desktop/src-tauri/binaries/git-credential-nostr-$TARGET"
     touch "desktop/src-tauri/binaries/buzz-$TARGET"
     pnpm install
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cd {{desktop_dir}} && pnpm tauri build --features mesh-llm --target {{target}}
 
 # Run desktop checks suitable for CI / pre-push
@@ -307,6 +327,8 @@ test:
 test-unit:
     #!/usr/bin/env bash
     set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
+    ./scripts/test-ensure-sherpa-onnx-archive.sh
     if command -v cargo-nextest &>/dev/null; then
         cargo nextest run -p buzz-core -p buzz-auth --lib
         cargo nextest run -p buzz-voice --lib
@@ -360,6 +382,9 @@ regen-model-corpus:
 # Buzz shared compute e2e: current desktop discovery/admission logic and
 # Playwright UI coverage.
 mesh-e2e:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo test --manifest-path {{desktop_dir}}/src-tauri/Cargo.toml --features mesh-llm mesh_llm --lib
     cd {{desktop_dir}} && pnpm test:e2e:smoke -- mesh-compute.spec.ts
 
@@ -483,6 +508,7 @@ dev *ARGS: bootstrap _ensure-sidecar-stubs _ensure-migrations
             fi
         done
     fi
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo build -p buzz-acp -p buzz-agent -p buzz-backend-kubernetes -p buzz-dev-mcp -p buzz-cli -p git-credential-nostr -p buzz-relay
     # Docker Desktop's forwarded MinIO port can stall under the deployment
     # probe's 32 concurrent writers. Keep the gate enabled in local dev, using
@@ -527,6 +553,7 @@ desktop-standalone *ARGS: _ensure-sidecar-stubs
     #!/usr/bin/env bash
     set -euo pipefail
     export PATH="{{justfile_directory()}}/bin:$PATH"
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo build -p buzz-acp -p buzz-agent -p buzz-backend-kubernetes -p buzz-dev-mcp -p buzz-cli -p git-credential-nostr
     TARGET=$(rustc -vV | sed -n 's|host: ||p')
     TARGET_DIR=$(cargo metadata --format-version 1 --no-deps | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).target_directory")
@@ -556,6 +583,7 @@ staging *ARGS: bootstrap _ensure-sidecar-stubs
     set -euo pipefail
     export PATH="{{justfile_directory()}}/bin:$PATH"
     pnpm install  # unconditional: staging must always start with a clean dep tree
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo build --release -p buzz-acp -p buzz-agent -p buzz-backend-kubernetes -p buzz-dev-mcp -p buzz-cli -p git-credential-nostr
     FEATURES=()
     if [[ -n "{{mesh}}" ]]; then
@@ -591,6 +619,7 @@ production *ARGS: bootstrap _ensure-sidecar-stubs
     set -euo pipefail
     export PATH="{{justfile_directory()}}/bin:$PATH"
     pnpm install  # unconditional: production must always start with a clean dep tree
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo build --release -p buzz-acp -p buzz-agent -p buzz-backend-kubernetes -p buzz-dev-mcp -p buzz-cli -p git-credential-nostr
     FEATURES=()
     if [[ -n "{{mesh}}" ]]; then
@@ -729,6 +758,9 @@ clean:
 
 # Check the Rust workspace compiles without producing binaries
 check-compile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source "{{justfile_directory()}}/scripts/ensure-sherpa-onnx-archive.sh"
     cargo check --workspace --all-targets
 
 # ─── Release ─────────────────────────────────────────────────────────────────
