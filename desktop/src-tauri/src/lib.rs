@@ -29,6 +29,7 @@ mod models;
 mod native_websocket;
 mod nostr_bind;
 pub mod nostr_convert;
+mod platform_tls;
 mod prevent_sleep;
 mod ptt_shortcut;
 mod relay;
